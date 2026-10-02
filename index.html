@@ -20,7 +20,7 @@ body{background:#0f0c29;color:#fff;font-family:'Segoe UI',sans-serif;overflow:hi
 .key-btn.correct{background:#51cf66;border-color:#51cf66}
 .key-btn.wrong{background:#ff6b6b;border-color:#ff6b6b;animation:shake 0.3s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-#overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;overflow-y:auto;padding:20px}
 #overlay.hidden{display:none}
 #overlay h1{font-size:38px;margin-bottom:8px}
 #overlay h2{font-size:24px;color:#ffd700;margin-bottom:16px}
@@ -29,11 +29,24 @@ body{background:#0f0c29;color:#fff;font-family:'Segoe UI',sans-serif;overflow:hi
 .menu-btn{background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);color:#fff;padding:12px 20px;font-size:16px;border-radius:12px;cursor:pointer;transition:all 0.2s}
 .menu-btn:hover{background:rgba(255,255,255,0.2);transform:scale(1.05)}
 .menu-btn.selected{background:#667eea;border-color:#667eea}
-.btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:14px 40px;font-size:20px;border-radius:30px;cursor:pointer;transition:transform 0.2s;margin-top:10px}
+.btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:14px 40px;font-size:20px;border-radius:30px;cursor:pointer;transition:transform 0.2s;margin:5px}
 .btn:hover{transform:scale(1.05)}
 .btn:active{transform:scale(0.95)}
+.btn-secondary{background:linear-gradient(135deg,#20c997,#339af0)}
 #progress-bar{position:absolute;top:0;left:0;height:4px;background:linear-gradient(90deg,#667eea,#764ba2);transition:width 0.3s}
 #streak-flash{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;font-weight:bold;color:#ffd700;pointer-events:none;opacity:0;z-index:50;transition:opacity 0.5s}
+.rank{font-size:64px;margin:10px 0}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;text-align:center;margin:10px 0}
+.stat-grid .label{color:#aaa;font-size:13px}
+.stat-grid .value{color:#fff;font-size:22px;font-weight:bold}
+.stat-grid .value.gold{color:#ffd700}
+.stat-grid .value.green{color:#51cf66}
+.stat-grid .value.red{color:#ff6b6b}
+.stat-grid .value.blue{color:#339af0}
+.new-record{color:#ffd700;font-size:18px;font-weight:bold;animation:pulse 1s infinite;margin:8px 0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:60px;margin:10px 0}
+.bar-chart .bar{min-width:6px;background:linear-gradient(to top,#667eea,#764ba2);border-radius:3px 3px 0 0;transition:height 0.5s}
 </style>
 </head>
 <body>
@@ -67,11 +80,11 @@ body{background:#0f0c29;color:#fff;font-family:'Segoe UI',sans-serif;overflow:hi
 </div>
 <div id="streak-flash"></div>
 <script>
-const WORDS_EN=['the','and','for','are','but','not','you','all','can','had','her','was','one','our','out','day','get','has','him','his','how','man','new','now','old','see','two','way','who','boy','did','its','let','put','say','she','too','use','cat','dog','run','sun','fun','big','red','hot','top','map','cup','pen','box','car','bus','tree','fish','bird','star','moon','rain','snow','fire','ice','rock','leaf','wave','cloud','wind','light','dark','fast','slow','high','low','long','short','wide','thin','thick','soft','hard','warm','cool','cold','sweet','sour','salt','spice','milk','rice','bread','meat','egg','soup','cake','jam','tea','juice','water','apple','grape','lemon','peach','melon','berry','cherry','banana','orange','potato','tomato','onion','garlic','pepper','cheese','butter','flour','sugar','honey','bread','toast','cookie','pizza','noodle','sushi','ramen','tempura','sashimi','matcha','sakura','torii','shrine','temple','garden','flower','blossom','spring','summer','autumn','winter','morning','evening','midnight','dawn','dusk','horizon','ocean','river','mountain','valley','forest','desert','island','beach','coast','harbor','bridge','tower','castle','palace','garden','garden','kitchen','bedroom','bathroom','garage','attic','basement','window','door','wall','floor','ceiling','roof','stair','elevator','hallway','corridor','garden','balcony','terrace','porch','yard','field','farm','village','city','town','street','avenue','boulevard','plaza','square','market','shop','store','bank','school','office','factory','hospital','church','library','museum','theater','cinema','stadium','airport','station','platform','ticket','passenger','driver','pilot','engineer','doctor','nurse','teacher','student','artist','writer','poet','musician','dancer','actor','director','producer','designer','developer','programmer','coder','hacker','player','winner','loser','champion','hero','villain','friend','enemy','partner','rival','neighbor','stranger','guest','host','owner','manager','boss','clerk','worker','farmer','fisher','hunter','gatherer','trader','merchant','sailor','captain','crew','ship','boat','plane','train','truck','van','bike','cycle','wheel','engine','motor','fuel','gasoline','diesel','electric','battery','charger','screen','monitor','keyboard','mouse','tablet','laptop','desktop','server','router','modem','wireless','signal','network','internet','website','browser','search','download','upload','email','message','chat','call','video','photo','camera','picture','image','graphic','pixel','vector','render','model','texture','shader','particle','physics','gravity','velocity','acceleration','momentum','energy','power','force','mass','volume','density','pressure','temperature','heat','cold','light','sound','wave','frequency','amplitude','phase','spectrum','prism','laser','photon','electron','proton','neutron','atom','molecule','compound','element','periodic','table','chemistry','biology','physics','geology','astronomy','cosmos','galaxy','nebula','quasar','pulsar','comet','asteroid','meteor','eclipse','solstice','equinox','season','climate','weather','storm','thunder','lightning','rainbow','aurora','tornado','cyclone','hurricane','typhoon','earthquake','volcano','tsunami','flood','drought','famine','plague','epidemic','pandemic','vaccine','serum','antibody','immune','cellular','genetic','genome','chromosome','dna','rna','protein','enzyme','catalyst','reaction','synthesis','decomposition','oxidation','reduction','acid','alkali','neutral','phosphate','calcium','sodium','potassium','magnesium','iron','copper','zinc','silver','gold','platinum','uranium','plutonium','radioactive','radiation','nuclear','fission','fusion','plasma','quantum','entangled','superposition','uncertainty','heisenberg','schrodinger','einstein','newton','galileo','copernicus','kepler','hubble','telescope','microscope','spectrometer','centrifuge','pipette','beaker','flask','testtube','petridish','culture','sample','specimen','analysis','diagnosis','treatment','therapy','surgery','operation','anesthesia','incision','suture','bandage','gauze','sterile','aseptic','hygiene','sanitation','disinfect','antiseptic','antibiotic','antiviral','antifungal','antihistamine','analgesic','sedative','stimulant','depressant','antidepressant','antipsychotic','mood','emotion','feeling','sentiment','affection','compassion','empathy','sympathy','solidarity','community','society','culture','tradition','heritage','legacy','inheritance','succession','generation','ancestor','descendant','lineage','pedigree','genealogy','family','kinship','marriage','divorce','custody','adoption','foster','guardian','ward','trustee','executor','beneficiary','heir','estate','property','realty','lease','rental','mortgage','equity','debt','credit','loan','interest','dividend','profit','revenue','income','expense','budget','accounting','audit','tax','deduction','exemption','liability','asset','liability','balance','ledger','journal','invoice','receipt','payment','transaction','settlement','clearing','exchange','currency','forex','stock','bond','fund','portfolio','diversify','allocate','invest','speculate','trade','commerce','economy','market','demand','supply','inflation','deflation','recession','boom','bubble','crash','crisis','reform','policy','regulation','legislation','statute','ordinance','decree','mandate','directive','protocol','procedure','protocol','standard','benchmark','metric','indicator','index','ratio','percentage','fraction','decimal','integer','binary','hexadecimal','octal','radix','base','exponent','logarithm','algorithm','recursion','iteration','loop','branch','condition','boolean','variable','constant','parameter','argument','function','method','class','object','instance','interface','abstract','virtual','polymorphism','inheritance','encapsulation','abstraction','oop','functional','reactive','async','promise','callback','closure','scope','namespace','module','package','dependency','framework','library','sdk','api','endpoint','request','response','payload','header','token','authentication','authorization','credential','certificate','encryption','decryption','hash','cipher','symmetric','asymmetric','public','private','key','signature','integrity','confidentiality','availability','redundancy','backup','restore','archive','snapshot','checkpoint','rollback','migration','deployment','release','version','revision','commit','branch','merge','rebase','stash','clone','fork','pull','push','fetch','checkout','switch','track','ignore','exclude','include','import','export','require','define','declare','assign','reference','dereference','pointer','address','memory','heap','stack','queue','stack','array','list','linked','tree','graph','node','edge','vertex','adjacent','incident','degree','weight','cost','distance','path','route','routing','shortest','dijkstra','bellman','floyd','warshall','kruskal','prim','dfs','bfs','topological','sort','quicksort','mergesort','heapsort','bucketsort','radixsort','countingsort','insertionsort','selectionsort','bubblesort','shell','comb','tim','introsort','pdq','parallel','concurrent','thread','process','daemon','mutex','lock','semaphore','barrier','rendezvous','deadlock','livelock','starvation','priority','preemption','scheduling','roundrobin','fairness','throughput','latency','jitter','bandwidth','throughput','utilization','efficiency','effectiveness','productivity','quality','reliability','robustness','scalability','maintainability','portability','compatibility','interoperability','usability','accessibility','ergonomics','aesthetics','appeal','charm','elegance','sophistication','refinement','polish','finishing','detail','nuance','subtlety','ambiguity','clarity','precision','accuracy','validity','reliability','credibility','authenticity','originality','creativity','innovation','invention','discovery','exploration','experiment','hypothesis','theory','law','theorem','proof','axiom','postulate','lemma','corollary','conjecture','paradox','contradiction','consistency','completeness','soundness','decidability','computability','turing','halting','undecidable','unsolvable','np','complete','hard','reduction','approximation','heuristic','greedy','dynamic','programming','optimization','constraint','feasible','optimal','local','global','converge','diverge','oscillate','stable','unstable','chaos','fractal','dimension','embedding','manifold','topology','geometry','algebra','calculus','differential','integral','derivative','gradient','jacobian','hessian','laplacian','fourier','fourier','laplace','zeta','riemann','euler','gaussian','gauss','poisson','bayes','markov','monte','carlo','random','stochastic','probabilistic','deterministic','causal','correlation','regression','classification','clustering','dimensionality','reduction','feature','extraction','selection','engineering','augmentation','normalization','regularization','dropout','batch','momentum','adam','learning','rate','epoch','iteration','convergence','overfitting','underfitting','generalization','validation','cross','validate','holdout','train','test','split','shuffle','seed','reproducibility','determinism','non','determinism','entropy','information','mutual','information','kl','divergence','cross','entropy','perplexity','bleu','rouge','f1','precision','recall','specificity','sensitivity','auc','roc','confusion','matrix','false','positive','negative','type','error','statistical','significance','confidence','interval','hypothesis','testing','pvalue','null','alternative','reject','fail','accept','power','effect','size','sample','population','bias','variance','tradeoff','pareto','frontier','dominance','multiobjective','optimization','evolutionary','genetic','simulated','annealing','particle','swarm','ant','colony','differential','evolution','cma','es','bayesian','optimization','hyperparameter','tuning','grid','random','search','optuna','ray','dask','spark','hadoop','kafka','flink','storm','cep','streaming','batch','lambda','kappa','architecture','microservice','monolith','serverless','edge','fog','iot','device','sensor','actuator','controller','pid','feedback','feedforward','disturbance','noise','filter','kalman','particle','extended','unscented','ensemble','bagging','boosting','stacking','blending','stacking','meta','learner','xgboost','lightgbm','catboost','random','forest','gradient','decision','cart','c45','naive','bayes','svm','kernel','rbf','poly','linear','ridge','lasso','elastic','net','glm','logistic','probit','poisson','negative','binomial','survival','cox','hazard','kaplan','meier','time','event','censoring','missing','imputation','multiple','single','pattern','mechanism','attrition','turnover','retention','churn','lifetime','value','acquisition','activation','revenue','referral','recommendation','collaborative','filtering','content','based','hybrid','cold','start','sparsity','implicit','explicit','rating','prediction','ranking','retrieval','search','information','relevance','precision','recall','fmeasure','ndcg','map','mrr','hit','rate','coverage','diversity','novelty','serendipity','satisfaction','engagement','retention','loyalty','advocacy','virality','growth','funnel','conversion','attribution','campaign','channel','segment','persona','journey','touchpoint','interaction','experience','expectation','perception','cognition','behavior','psychology','sociology','anthropology','archaeology','linguistics','philosophy','ethics','morality','virtue','justice','freedom','equality','liberty','democracy','authoritarianism','totalitarianism','fascism','communism','socialism','capitalism','feudalism','slavery','colonialism','imperialism','nationalism','globalization','internationalism','multilateralism','bilateralism','unilateralism','sovereignty','territory','border','frontier','boundary','demarcation','delimitation','demarcation','survey','mapping','cartography','geodesy','geodesy','geodesy','geodesy']
-const WORDS_JA=['あいうえお','かきくけこ','さしすせそ','たちつてと','なにぬねの','はひふへほ','まみむめも','やゆよ','らりるれろ','わをん','ありがとう','さようなら','こんにちは','おはよう','おやすみ','いただきます','ごちそうさま','すみません','どういたしまして','よろしくお願いします','お疲れ様です','頑張ってね','大丈夫','わからない','難しい','簡単','面白い','楽しい','嬉しい','悲しい','怖い','すごい','きれい','かわいい','カッコいい','おいしい','美味しい','お腹すいた','眠い','疲れた','暑い','寒い','温かい','冷たい','高い','安い','大きい','小さい','長い','短い','広い','狭い','速い','遅い','重い','軽い','強い','弱い','新しい','古い','若い','年寄り','元気','病気','医者','薬','病院','学校','先生','学生','友達','家族','お母さん','お父さん','兄弟','姉妹','恋人','結婚','離婚','出産','誕生日','クリスマス','バレンタイン','ハロウィン','お正月','お盆','お彼岸','七夕','花火','桜','紅葉','雪','雨','風','雷','地震','台風','洪水','津波','火山','山','川','海','湖','池','島','橋','道','街','町','村','都道府県','東京','大阪','京都','名古屋','福岡','札幌','広島','神戸','横浜','仙台','新潟','高知','熊本','鹿児島','沖縄','北海道','本州','四国','九州','日本','世界','地球','宇宙','星','月','太陽','惑星','銀河','天体','物理','化学','生物','地学','数学','歴史','地理','英語','国語','社会','理科','体育','音楽','美術','技術','家庭','情報','プログラミング','コンピュータ','インターネット','スマートフォン','パソコン','タブレット','テレビ','ラジオ','新聞','雑誌','本','小説','詩','歌','曲','映画','アニメ','漫画','ゲーム','音楽','コンサート','ライブ','フェスティバル','イベント','スポーツ','サッカー','野球','テニス','ゴルフ','水泳','マラソン','体操','武道','剣道','柔道','空手','弓道','相撲','レスリング','ボクシング','格闘技','オリンピック','ワールドカップ','甲子園','プロ野球','Jリーグ','バスケ','バレーボール','卓球','バドミントン','ソフトボール','ハンドボール','ホッケー','ラグビー','アメリカンフットボール','アイスホッケー','フィギュアスケート','アルペンスキー','ノルディック','バイアスロン','クロスカントリー','スピードスケート','ショートトラックスピードスケート','カーリング','リュージュ','ボブスレー','スノーボード','スキー','スケート','サーフィン','スキューバダイビング','ヨット','セーリング','カヌー','カヤック','カヌー','パドル','パドルボード','SUP','ウォータースポーツ','マラソン','トライアスロン','デュアスロン','ウルトラマラソン','駅伝','マラソンの大会','フルマラソン','ハーフマラソン','10キロ','5キロ','3キロ','1キロ','100メートル','200メートル','400メートル','800メートル','1500メートル','5000メートル','10000メートル','マラソン','競歩','マラソン','マラソン'];
+const WORDS_EN=['the','and','for','are','but','not','you','all','can','had','her','was','one','our','out','day','get','has','him','his','how','man','new','now','old','see','two','way','who','boy','did','its','let','put','say','she','too','use','cat','dog','run','sun','fun','big','red','hot','top','map','cup','pen','box','car','bus','tree','fish','bird','star','moon','rain','snow','fire','ice','rock','leaf','wave','cloud','wind','light','dark','fast','slow','high','low','long','short','wide','thin','thick','soft','hard','warm','cool','cold','sweet','sour','salt','spice','milk','rice','bread','meat','egg','soup','cake','jam','tea','juice','water','apple','grape','lemon','peach','melon','berry','cherry','banana','orange','potato','tomato','onion','garlic','pepper','cheese','butter','flour','sugar','honey','toast','cookie','pizza','noodle','sushi','ramen','tempura','sashimi','matcha','sakura','torii','shrine','temple','garden','flower','blossom','spring','summer','autumn','winter','morning','evening','midnight','dawn','dusk','horizon','ocean','river','mountain','valley','forest','desert','island','beach','coast','harbor','bridge','tower','castle','palace','kitchen','bedroom','bathroom','garage','attic','basement','window','door','wall','floor','ceiling','roof','stair','elevator','hallway','corridor','balcony','terrace','porch','yard','field','farm','village','city','town','street','avenue','boulevard','plaza','square','market','shop','store','bank','school','office','factory','hospital','church','library','museum','theater','cinema','stadium','airport','station','platform','ticket','passenger','driver','pilot','engineer','doctor','nurse','teacher','student','artist','writer','poet','musician','dancer','actor','director','producer','designer','developer','programmer','coder','hacker','player','winner','loser','champion','hero','villain','friend','enemy','partner','rival','neighbor','stranger','guest','host','owner','manager','boss','clerk','worker','farmer','fisher','hunter','trader','merchant','sailor','captain','crew','ship','boat','plane','train','truck','van','bike','cycle','wheel','engine','motor','fuel','gasoline','diesel','electric','battery','charger','screen','monitor','keyboard','mouse','tablet','laptop','desktop','server','router','modem','wireless','signal','network','internet','website','browser','search','download','upload','email','message','chat','call','video','photo','camera','picture','image','graphic','pixel','vector','render','model','texture','shader','particle','physics','gravity','velocity','momentum','energy','power','force','mass','volume','density','pressure','temperature','heat','sound','frequency','amplitude','spectrum','prism','laser','photon','electron','proton','neutron','atom','molecule','compound','element','chemistry','biology','geology','astronomy','cosmos','galaxy','nebula','comet','asteroid','meteor','eclipse','season','climate','weather','storm','thunder','lightning','rainbow','aurora','tornado','cyclone','hurricane','typhoon','earthquake','volcano','tsunami','flood','drought','algorithm','recursion','iteration','loop','branch','condition','boolean','variable','constant','parameter','function','method','class','object','interface','abstract','polymorphism','inheritance','encapsulation','module','package','framework','library','api','endpoint','request','response','token','encryption','hash','cipher','database','backup','migration','deployment','release','version','commit','merge','clone','fork','array','list','tree','graph','node','queue','stack','sort','binary','compile','debug','runtime','exception','memory','thread','process','kernel','daemon','protocol','standard','benchmark','metric','optimization','constraint','feasible','optimal','convergence','validation','regression','classification','clustering','gradient','neural','dropout','embedding','attention','transformer','diffusion','reinforcement','reward','policy','agent','environment'];
+const WORDS_JA=['あいうえお','かきくけこ','さしすせそ','たちつてと','なにぬねの','はひふへほ','まみむめも','やゆよ','らりるれろ','わをん','ありがとう','さようなら','こんにちは','おはよう','おやすみ','いただきます','ごちそうさま','すみません','どういたしまして','よろしくお願いします','お疲れ様です','頑張ってね','大丈夫','わからない','難しい','簡単','面白い','楽しい','嬉しい','悲しい','怖い','すごい','きれい','かわいい','カッコいい','おいしい','美味しい','お腹すいた','眠い','疲れた','暑い','寒い','温かい','冷たい','高い','安い','大きい','小さい','長い','短い','広い','狭い','速い','遅い','重い','軽い','強い','弱い','新しい','古い','若い','年寄り','元気','病気','医者','薬','病院','学校','先生','学生','友達','家族','お母さん','お父さん','兄弟','姉妹','恋人','結婚','離婚','出産','誕生日','クリスマス','バレンタイン','ハロウィン','お正月','お盆','お彼岸','七夕','花火','桜','紅葉','雪','雨','風','雷','地震','台風','洪水','津波','火山','山','川','海','湖','池','島','橋','道','街','町','村','東京','大阪','京都','名古屋','福岡','札幌','広島','神戸','横浜','仙台','新潟','高知','熊本','鹿児島','沖縄','北海道','本州','四国','九州','日本','世界','地球','宇宙','星','月','太陽','惑星','銀河','天体','物理','化学','生物','地学','数学','歴史','地理','英語','国語','社会','理科','体育','音楽','美術','技術','家庭','情報','プログラミング','コンピュータ','インターネット','スマートフォン','パソコン','タブレット','テレビ','ラジオ','新聞','雑誌','本','小説','詩','歌','曲','映画','アニメ','漫画','ゲーム','コンサート','ライブ','フェスティバル','イベント','スポーツ','サッカー','野球','テニス','ゴルフ','水泳','マラソン','体操','武道','剣道','柔道','空手','弓道','相撲','レスリング','ボクシング','格闘技','オリンピック','ワールドカップ','甲子園','プロ野球','Jリーグ','バスケ','バレーボール','卓球','バドミントン','ソフトボール','ハンドボール','ホッケー','ラグビー','フィギュアスケート','スノーボード','スキー','スケート','サーフィン','ヨット','カヌー','カヤック','マラソン','トライアスロン','駅伝'];
 const MODES={en:{words:WORDS_EN,label:'🔤 英語'},ja:{words:WORDS_JA,label:'🈳 日本語'},mix:{words:[...WORDS_EN.slice(0,200),...WORDS_JA],label:'🔀 混合'},hard:{words:WORDS_EN.filter(w=>w.length>=8),label:'🔥 ハード'}};
 const LEVELS={easy:{speed:1.2,lives:5,time:90},normal:{speed:2,lives:3,time:60},hard:{speed:3,lives:3,time:45},expert:{speed:4.5,lives:2,time:30}};
-let mode='en',level='normal',playing=false,score=0,combo=1,maxCombo=0,timer=0,timerID=null,lives=3,currentWord='',typed='',words=[],particles=[];
+let mode='en',level='normal',playing=false,score=0,combo=1,maxCombo=0,timer=0,timerID=null,lives=3,currentWord='',typed='',wordsCompleted=0,totalMisses=0;
 const display=document.getElementById('word-display');
 const inputArea=document.getElementById('input-area');
 const overlay=document.getElementById('overlay');
@@ -130,11 +143,20 @@ function handleKey(ch){
       highlightKey(ch,true);
       charCount++;
       updateDisplay();
+      updateWPM();
       if(typed===currentWord) wordComplete();
     }else{
       highlightKey(ch,false);
       loseLife();
     }
+  }
+}
+
+function updateWPM(){
+  const elapsed=(Date.now()-startTime)/1000;
+  if(elapsed>0){
+    const wpm=Math.round((charCount/5)/(elapsed/60)||0);
+    wpmEl.textContent=wpm+' WPM';
   }
 }
 
@@ -150,10 +172,12 @@ function updateDisplay(){
 }
 
 function wordComplete(){
-  score+=currentWord.length*10*combo;
+  const pts=currentWord.length*10*combo;
+  score+=pts;
   combo=Math.min(combo+1,10);
   maxCombo=Math.max(maxCombo,combo);
-  scoreEl.textContent='⭐ '+score;
+  wordsCompleted++;
+  scoreEl.textContent='⭐ '+score.toLocaleString();
   comboEl.textContent='🔥 x'+combo;
   if(combo>1&&combo%5===0)showStreak('🔥 x'+combo+' COMBO!');
   nextWord();
@@ -174,6 +198,7 @@ function nextWord(){
 function loseLife(){
   lives--;
   combo=1;
+  totalMisses++;
   livesEl.textContent='❤️'.repeat(lives)+'🖤'.repeat(LEVELS[level].lives-lives);
   comboEl.textContent='🔥 x1';
   if(lives<=0)gameOver();
@@ -181,13 +206,14 @@ function loseLife(){
 
 function startGame(){
   const cfg=LEVELS[level];
-  playing=true;lives=cfg.lives;score=0;combo=1;maxCombo=0;charCount=0;
+  playing=true;lives=cfg.lives;score=0;combo=1;maxCombo=0;charCount=0;wordsCompleted=0;totalMisses=0;
   timer=cfg.time;startTime=Date.now();
   overlay.classList.add('hidden');
   scoreEl.textContent='⭐ 0';
   comboEl.textContent='🔥 x1';
   livesEl.textContent='❤️'.repeat(lives);
   timerEl.textContent='⏱ '+timer+'s';
+  wpmEl.textContent='0 WPM';
   buildKeyboard();
   nextWord();
   clearInterval(timerID);
@@ -196,23 +222,79 @@ function startGame(){
     timerEl.textContent='⏱ '+timer+'s';
     if(timer<=10)timerEl.style.color='#ff0000';
     else timerEl.style.color='#339af0';
+    updateWPM();
     if(timer<=0)gameOver();
   },1000);
+}
+
+function getRank(score,wpm){
+  // Combined ranking based on score and WPM
+  const combined=score+(wpm*10);
+  if(combined>=5000) return {rank:'S',emoji:'👑',color:'#ffd700',desc:'タイピングマスター！'};
+  if(combined>=3000) return {rank:'A',emoji:'🌟',color:'#ff922b',desc:'すばらしい！'};
+  if(combined>=1500) return {rank:'B',emoji:'⭐',color:'#339af0',desc:'いい調子！'};
+  if(combined>=500)  return {rank:'C',emoji:'✨',color:'#51cf66',desc:'もっと練習しよう！'};
+  return {rank:'D',emoji:'💪',color:'#aaa',desc:'がんばれ！'};
 }
 
 function gameOver(){
   playing=false;clearInterval(timerID);
   const elapsed=(Date.now()-startTime)/1000;
   const wpm=Math.round((charCount/5)/(elapsed/60)||0);
-  const isRecord=score>(parseInt(localStorage.getItem('typing_highscore_'+mode+level)||'0'));
-  if(isRecord)localStorage.setItem('typing_highscore_'+mode+level,score);
-  const highScore=localStorage.getItem('typing_highscore_'+mode+level)||'0';
+  const accuracy=Math.round((charCount/(charCount+totalMisses))*100)||0;
+  const r=getRank(score,wpm);
+  const highKey='typing_highscore_'+mode+level;
+  const prevHigh=parseInt(localStorage.getItem(highKey)||'0');
+  const isRecord=score>prevHigh;
+  if(isRecord)localStorage.setItem(highKey,score);
+  const highScore=Math.max(prevHigh,score);
+
+  // Determine end reason
+  const reason=lives<=0?'ライフがなくなった！':'時間切れ！';
+
   overlay.classList.remove('hidden');
-  overlay.innerHTML=`<h1>🎮 GAME OVER</h1><h2>${MODES[mode].label} / ${level.toUpperCase()}</h2>
-  <p>スコア: <b style="color:#ffd700">${score}</b><br>
-  WPM: <b style="color:#51cf66">${wpm}</b> | 最大コンボ: <b style="color:#ff6b6b">x${maxCombo}</b><br>
-  最高記録: ${highScore}${isRecord?' 🆕 NEW RECORD!':''}</p>
-  <button class="btn" onclick="location.reload()">もう一回</button>`;
+  overlay.innerHTML=`
+    <h1>🎮 GAME OVER</h1>
+    <h2>${MODES[mode].label} / ${level.toUpperCase()}</h2>
+    <p style="margin-bottom:8px">${reason}</p>
+    <div class="rank" style="color:${r.color}">${r.emoji} ${r.rank}ランク</div>
+    <p style="color:${r.color};margin:0 0 10px;font-size:14px">${r.desc}</p>
+    <div class="stat-grid">
+      <div><div class="label">スコア</div><div class="value gold">${score.toLocaleString()}</div></div>
+      <div><div class="label">最高記録</div><div class="value">${highScore.toLocaleString()}</div></div>
+      <div><div class="label">WPM</div><div class="value green">${wpm}</div></div>
+      <div><div class="label">最大コンボ</div><div class="value red">x${maxCombo}</div></div>
+      <div><div class="label">正確率</div><div class="value blue">${accuracy}%</div></div>
+      <div><div class="label">完成単語</div><div class="value">${wordsCompleted}語</div></div>
+      <div><div class="label">打鍵数</div><div class="value">${charCount}</div></div>
+      <div><div class="label">ミス数</div><div class="value red">${totalMisses}</div></div>
+    </div>
+    ${isRecord?'<div class="new-record">🆕 NEW RECORD!</div>':''}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px">
+      <button class="btn" onclick="startGame()">もう一回</button>
+      <button class="btn btn-secondary" onclick="showTitle()">タイトルへ</button>
+    </div>`;
+}
+
+function showTitle(){
+  overlay.classList.remove('hidden');
+  overlay.innerHTML=`
+    <h1>⌨️ タイピングゲーム</h1>
+    <h2>全部入り</h2>
+    <p>落ちてくる文字を打って消そう！<br>コンボでスコア倍率アップ！</p>
+    <div class="menu-grid">
+    <button class="menu-btn${mode==='en'?' selected':''}" data-mode="en" onclick="selectMode(this)">🔤 英語</button>
+    <button class="menu-btn${mode==='ja'?' selected':''}" data-mode="ja" onclick="selectMode(this)">🈳 日本語</button>
+    <button class="menu-btn${mode==='mix'?' selected':''}" data-mode="mix" onclick="selectMode(this)">🔀 混合</button>
+    <button class="menu-btn${mode==='hard'?' selected':''}" data-mode="hard" onclick="selectMode(this)">🔥 ハード</button>
+    </div>
+    <div class="menu-grid">
+    <button class="menu-btn${level==='easy'?' selected':''}" data-level="easy" onclick="selectLevel(this)">🌱 イージー</button>
+    <button class="menu-btn${level==='normal'?' selected':''}" data-level="normal" onclick="selectLevel(this)">🌿 ノーマル</button>
+    <button class="menu-btn${level==='hard'?' selected':''}" data-level="hard" onclick="selectLevel(this)">🌲 ハード</button>
+    <button class="menu-btn${level==='expert'?' selected':''}" data-level="expert" onclick="selectLevel(this)">💀 エキスパート</button>
+    </div>
+    <button class="btn" onclick="startGame()">START</button>`;
 }
 
 document.addEventListener('keydown',e=>{
