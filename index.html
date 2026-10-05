@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>タイピングゲーム</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f0c29;color:#fff;font-family:'Segoe UI',sans-serif;overflow:hidden;touch-action:manipulation;display:flex;flex-direction:column;height:100vh}
+#hud{display:flex;justify-content:center;gap:20px;padding:10px;font-size:16px;font-weight:bold;flex-wrap:wrap}
+.hud-item{background:rgba(255,255,255,0.1);padding:5px 14px;border-radius:20px}
+#score{color:#ffd700}#combo{color:#ff6b6b}#timer{color:#339af0}#lives{color:#ff6b6b}#wpm{color:#51cf66}
+#game-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#word-display{font-size:clamp(28px,6vw,52px);font-weight:bold;text-align:center;padding:20px;letter-spacing:2px;min-height:80px;display:flex;align-items:center;justify-content:center;transition:transform 0.1s}
+#word-display.hit{animation:pop 0.3s ease}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+#input-area{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px}
+.key-row{display:flex;justify-content:center;gap:6px}
+.key-btn{width:52px;height:52px;border:2px solid rgba(255,255,255,0.3);border-radius:10px;background:rgba(255,255,255,0.08);color:#fff;font-size:22px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.1s;user-select:none}
+.key-btn.active{background:#667eea;border-color:#667eea;transform:scale(1.1)}
+.key-btn.correct{background:#51cf66;border-color:#51cf66}
+.key-btn.wrong{background:#ff6b6b;border-color:#ff6b6b;animation:shake 0.3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;overflow-y:auto;padding:20px}
+#overlay.hidden{display:none}
+#overlay h1{font-size:38px;margin-bottom:8px}
+#overlay h2{font-size:24px;color:#ffd700;margin-bottom:16px}
+#overlay p{font-size:16px;margin-bottom:20px;color:#aaa;text-align:center;max-width:400px;line-height:1.6}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.menu-btn{background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);color:#fff;padding:12px 20px;font-size:16px;border-radius:12px;cursor:pointer;transition:all 0.2s}
+.menu-btn:hover{background:rgba(255,255,255,0.2);transform:scale(1.05)}
+.menu-btn.selected{background:#667eea;border-color:#667eea}
+.btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:14px 40px;font-size:20px;border-radius:30px;cursor:pointer;transition:transform 0.2s;margin:5px}
+.btn:hover{transform:scale(1.05)}
+.btn:active{transform:scale(0.95)}
+.btn-secondary{background:linear-gradient(135deg,#20c997,#339af0)}
+#progress-bar{position:absolute;top:0;left:0;height:4px;background:linear-gradient(90deg,#667eea,#764ba2);transition:width 0.3s}
+#streak-flash{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;font-weight:bold;color:#ffd700;pointer-events:none;opacity:0;z-index:50;transition:opacity 0.5s}
+.rank{font-size:64px;margin:10px 0}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;text-align:center;margin:10px 0}
+.stat-grid .label{color:#aaa;font-size:13px}
+.stat-grid .value{color:#fff;font-size:22px;font-weight:bold}
+.stat-grid .value.gold{color:#ffd700}
+.stat-grid .value.green{color:#51cf66}
+.stat-grid .value.red{color:#ff6b6b}
+.stat-grid .value.blue{color:#339af0}
+.new-record{color:#ffd700;font-size:18px;font-weight:bold;animation:pulse 1s infinite;margin:8px 0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:60px;margin:10px 0}
+.bar-chart .bar{min-width:6px;background:linear-gradient(to top,#667eea,#764ba2);border-radius:3px 3px 0 0;transition:height 0.5s}
+@media(max-width:600px){.key-btn{width:36px;height:40px;font-size:16px}.key-row{gap:3px}#input-area{gap:4px;padding:6px}}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="hud">
+<span class="hud-item" id="score">⭐ 0</span>
+<span class="hud-item" id="combo">🔥 x1</span>
+<span class="hud-item" id="timer">⏱ 60s</span>
+<span class="hud-item" id="lives">❤️❤️❤️</span>
+<span class="hud-item" id="wpm">0 WPM</span>
+</div>
+<div id="game-area"><div id="word-display">READY?</div></div>
+<div id="input-area"></div>
+<div id="overlay">
+<h1>⌨️ タイピングゲーム</h1>
+<h2>全部入り</h2>
+<p>落ちてくる文字を打って消そう！<br>コンボでスコア倍率アップ！</p>
+<div class="menu-grid">
+<button class="menu-btn selected" data-mode="en" onclick="selectMode(this)">🔤 英語</button>
+<button class="menu-btn" data-mode="ja" onclick="selectMode(this)">🈳 日本語</button>
+<button class="menu-btn" data-mode="mix" onclick="selectMode(this)">🔀 混合</button>
+<button class="menu-btn" data-mode="hard" onclick="selectMode(this)">🔥 ハード</button>
+</div>
+<div class="menu-grid">
+<button class="menu-btn selected" data-level="easy" onclick="selectLevel(this)">🌱 イージー</button>
+<button class="menu-btn" data-level="normal" onclick="selectLevel(this)">🌿 ノーマル</button>
+<button class="menu-btn" data-level="hard" onclick="selectLevel(this)">🌲 ハード</button>
+<button class="menu-btn" data-level="expert" onclick="selectLevel(this)">💀 エキスパート</button>
+</div>
+<button class="btn" onclick="startGame()">START</button>
+</div>
+<div id="streak-flash"></div>
+<script>
+const WORDS_EN=['the','and','for','are','but','not','you','all','can','had','her','was','one','our','out','day','get','has','him','his','how','man','new','now','old','see','two','way','who','boy','did','its','let','put','say','she','too','use','cat','dog','run','sun','fun','big','red','hot','top','map','cup','pen','box','car','bus','tree','fish','bird','star','moon','rain','snow','fire','ice','rock','leaf','wave','cloud','wind','light','dark','fast','slow','high','low','long','short','wide','thin','thick','soft','hard','warm','cool','cold','sweet','sour','salt','spice','milk','rice','bread','meat','egg','soup','cake','jam','tea','juice','water','apple','grape','lemon','peach','melon','berry','cherry','banana','orange','potato','tomato','onion','garlic','pepper','cheese','butter','flour','sugar','honey','toast','cookie','pizza','noodle','sushi','ramen','tempura','sashimi','matcha','sakura','torii','shrine','temple','garden','flower','blossom','spring','summer','autumn','winter','morning','evening','midnight','dawn','dusk','horizon','ocean','river','mountain','valley','forest','desert','island','beach','coast','harbor','bridge','tower','castle','palace','kitchen','bedroom','bathroom','garage','attic','basement','window','door','wall','floor','ceiling','roof','stair','elevator','hallway','corridor','balcony','terrace','porch','yard','field','farm','village','city','town','street','avenue','boulevard','plaza','square','market','shop','store','bank','school','office','factory','hospital','church','library','museum','theater','cinema','stadium','airport','station','platform','ticket','passenger','driver','pilot','engineer','doctor','nurse','teacher','student','artist','writer','poet','musician','dancer','actor','director','producer','designer','developer','programmer','coder','hacker','player','winner','loser','champion','hero','villain','friend','enemy','partner','rival','neighbor','stranger','guest','host','owner','manager','boss','clerk','worker','farmer','fisher','hunter','trader','merchant','sailor','captain','crew','ship','boat','plane','train','truck','van','bike','cycle','wheel','engine','motor','fuel','gasoline','diesel','electric','battery','charger','screen','monitor','keyboard','mouse','tablet','laptop','desktop','server','router','modem','wireless','signal','network','internet','website','browser','search','download','upload','email','message','chat','call','video','photo','camera','picture','image','graphic','pixel','vector','render','model','texture','shader','particle','physics','gravity','velocity','momentum','energy','power','force','mass','volume','density','pressure','temperature','heat','sound','frequency','amplitude','spectrum','prism','laser','photon','electron','proton','neutron','atom','molecule','compound','element','chemistry','biology','geology','astronomy','cosmos','galaxy','nebula','comet','asteroid','meteor','eclipse','season','climate','weather','storm','thunder','lightning','rainbow','aurora','tornado','cyclone','hurricane','typhoon','earthquake','volcano','tsunami','flood','drought','algorithm','recursion','iteration','loop','branch','condition','boolean','variable','constant','parameter','function','method','class','object','interface','abstract','polymorphism','inheritance','encapsulation','module','package','framework','library','api','endpoint','request','response','token','encryption','hash','cipher','database','backup','migration','deployment','release','version','commit','merge','clone','fork','array','list','tree','graph','node','queue','stack','sort','binary','compile','debug','runtime','exception','memory','thread','process','kernel','daemon','protocol','standard','benchmark','metric','optimization','constraint','feasible','optimal','convergence','validation','regression','classification','clustering','gradient','neural','dropout','embedding','attention','transformer','diffusion','reinforcement','reward','policy','agent','environment'];
+const WORDS_JA=['あいうえお','かきくけこ','さしすせそ','たちつてと','なにぬねの','はひふへほ','まみむめも','やゆよ','らりるれろ','わをん','ありがとう','さようなら','こんにちは','おはよう','おやすみ','いただきます','ごちそうさま','すみません','どういたしまして','よろしくお願いします','お疲れ様です','頑張ってね','大丈夫','わからない','難しい','簡単','面白い','楽しい','嬉しい','悲しい','怖い','すごい','きれい','かわいい','カッコいい','おいしい','美味しい','お腹すいた','眠い','疲れた','暑い','寒い','温かい','冷たい','高い','安い','大きい','小さい','長い','短い','広い','狭い','速い','遅い','重い','軽い','強い','弱い','新しい','古い','若い','年寄り','元気','病気','医者','薬','病院','学校','先生','学生','友達','家族','お母さん','お父さん','兄弟','姉妹','恋人','結婚','離婚','出産','誕生日','クリスマス','バレンタイン','ハロウィン','お正月','お盆','お彼岸','七夕','花火','桜','紅葉','雪','雨','風','雷','地震','台風','洪水','津波','火山','山','川','海','湖','池','島','橋','道','街','町','村','東京','大阪','京都','名古屋','福岡','札幌','広島','神戸','横浜','仙台','新潟','高知','熊本','鹿児島','沖縄','北海道','本州','四国','九州','日本','世界','地球','宇宙','星','月','太陽','惑星','銀河','天体','物理','化学','生物','地学','数学','歴史','地理','英語','国語','社会','理科','体育','音楽','美術','技術','家庭','情報','プログラミング','コンピュータ','インターネット','スマートフォン','パソコン','タブレット','テレビ','ラジオ','新聞','雑誌','本','小説','詩','歌','曲','映画','アニメ','漫画','ゲーム','コンサート','ライブ','フェスティバル','イベント','スポーツ','サッカー','野球','テニス','ゴルフ','水泳','マラソン','体操','武道','剣道','柔道','空手','弓道','相撲','レスリング','ボクシング','格闘技','オリンピック','ワールドカップ','甲子園','プロ野球','Jリーグ','バスケ','バレーボール','卓球','バドミントン','ソフトボール','ハンドボール','ホッケー','ラグビー','フィギュアスケート','スノーボード','スキー','スケート','サーフィン','ヨット','カヌー','カヤック','マラソン','トライアスロン','駅伝'];
+const MODES={en:{words:WORDS_EN,label:'🔤 英語'},ja:{words:WORDS_JA,label:'🈳 日本語'},mix:{words:[...WORDS_EN.slice(0,200),...WORDS_JA],label:'🔀 混合'},hard:{words:WORDS_EN.filter(w=>w.length>=8),label:'🔥 ハード'}};
+const LEVELS={easy:{speed:1.2,lives:5,time:90},normal:{speed:2,lives:3,time:60},hard:{speed:3,lives:3,time:45},expert:{speed:4.5,lives:2,time:30}};
+let mode='en',level='normal',playing=false,score=0,combo=1,maxCombo=0,timer=0,timerID=null,lives=3,currentWord='',typed='',wordsCompleted=0,totalMisses=0;
+const display=document.getElementById('word-display');
+const inputArea=document.getElementById('input-area');
+const overlay=document.getElementById('overlay');
+const scoreEl=document.getElementById('score');
+const comboEl=document.getElementById('combo');
+const timerEl=document.getElementById('timer');
+const livesEl=document.getElementById('lives');
+const wpmEl=document.getElementById('wpm');
+const progressBar=document.getElementById('progress-bar');
+const streakFlash=document.getElementById('streak-flash');
+let startTime=0,charCount=0;
+
+function selectMode(el){document.querySelectorAll('[data-mode]').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');mode=el.dataset.mode;}
+function selectLevel(el){document.querySelectorAll('[data-level]').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');level=el.dataset.level;}
+
+function getWord(){
+  const pool=MODES[mode].words;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function buildKeyboard(){
+  inputArea.innerHTML='';
+  if(mode==='en'||mode==='mix'||mode==='hard'){
+    const rows=[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m']];
+    rows.forEach(row=>{
+      const rowDiv=document.createElement('div');
+      rowDiv.className='key-row';
+      row.forEach(ch=>{
+        const btn=document.createElement('button');
+        btn.className='key-btn';btn.textContent=ch.toUpperCase();btn.dataset.char=ch;
+        btn.addEventListener('click',()=>handleKey(ch));
+        rowDiv.appendChild(btn);
+      });
+      inputArea.appendChild(rowDiv);
+    });
+  }else{
+    const jaRows=[['あ','い','う','え','お','か','き','く','け','こ'],['さ','し','す','せ','そ','た','ち','つ','て','と'],['な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ'],['ま','み','む','め','も','や','ゆ','よ','ら','り'],['る','れ','ろ','わ','を','ん']];
+    jaRows.forEach(row=>{
+      const rowDiv=document.createElement('div');
+      rowDiv.className='key-row';
+      row.forEach(ch=>{
+        const btn=document.createElement('button');
+        btn.className='key-btn';btn.textContent=ch;btn.dataset.char=ch;
+        btn.style.width='36px';btn.style.height='36px';btn.style.fontSize='16px';
+        btn.addEventListener('click',()=>handleKey(ch));
+        rowDiv.appendChild(btn);
+      });
+      inputArea.appendChild(rowDiv);
+    });
+  }
+}
+
+function highlightKey(ch,correct){
+  const btn=inputArea.querySelector(`[data-char="${ch}"]`);
+  if(!btn)return;
+  btn.classList.add(correct?'correct':'wrong');
+  setTimeout(()=>btn.classList.remove('correct','wrong'),200);
+}
+
+function handleKey(ch){
+  if(!playing)return;
+  if(typed.length<currentWord.length){
+    const expected=currentWord[typed.length];
+    if(ch===expected||ch.toLowerCase()===expected.toLowerCase()){
+      typed+=ch;
+      highlightKey(ch,true);
+      charCount++;
+      updateDisplay();
+      updateWPM();
+      if(typed===currentWord) wordComplete();
+    }else{
+      highlightKey(ch,false);
+      loseLife();
+    }
+  }
+}
+
+function updateWPM(){
+  const elapsed=(Date.now()-startTime)/1000;
+  if(elapsed>0){
+    const wpm=Math.round((charCount/5)/(elapsed/60)||0);
+    wpmEl.textContent=wpm+' WPM';
+  }
+}
+
+function updateDisplay(){
+  let html='';
+  for(let i=0;i<currentWord.length;i++){
+    if(i<typed.length)html+='<span style="color:#51cf66">'+currentWord[i]+'</span>';
+    else if(i===typed.length)html+='<span style="color:#ffd700;border-bottom:3px solid #ffd700">'+currentWord[i]+'</span>';
+    else html+='<span style="opacity:0.5">'+currentWord[i]+'</span>';
+  }
+  display.innerHTML=html;
+  display.classList.remove('hit');void display.offsetWidth;display.classList.add('hit');
+}
+
+function wordComplete(){
+  const pts=currentWord.length*10*combo;
+  score+=pts;
+  combo=Math.min(combo+1,10);
+  maxCombo=Math.max(maxCombo,combo);
+  wordsCompleted++;
+  scoreEl.textContent='⭐ '+score.toLocaleString();
+  comboEl.textContent='🔥 x'+combo;
+  if(combo>1&&combo%5===0)showStreak('🔥 x'+combo+' COMBO!');
+  nextWord();
+}
+
+function showStreak(text){
+  streakFlash.textContent=text;
+  streakFlash.style.opacity='1';
+  setTimeout(()=>streakFlash.style.opacity='0',800);
+}
+
+function nextWord(){
+  currentWord=getWord();
+  typed='';
+  updateDisplay();
+}
+
+function loseLife(){
+  lives--;
+  combo=1;
+  totalMisses++;
+  livesEl.textContent='❤️'.repeat(lives)+'🖤'.repeat(LEVELS[level].lives-lives);
+  comboEl.textContent='🔥 x1';
+  if(lives<=0)gameOver();
+}
+
+function startGame(){
+  const cfg=LEVELS[level];
+  playing=true;lives=cfg.lives;score=0;combo=1;maxCombo=0;charCount=0;wordsCompleted=0;totalMisses=0;
+  timer=cfg.time;startTime=Date.now();
+  overlay.classList.add('hidden');
+  scoreEl.textContent='⭐ 0';
+  comboEl.textContent='🔥 x1';
+  livesEl.textContent='❤️'.repeat(lives);
+  timerEl.textContent='⏱ '+timer+'s';
+  wpmEl.textContent='0 WPM';
+  buildKeyboard();
+  nextWord();
+  clearInterval(timerID);
+  timerID=setInterval(()=>{
+    timer--;
+    timerEl.textContent='⏱ '+timer+'s';
+    if(timer<=10)timerEl.style.color='#ff0000';
+    else timerEl.style.color='#339af0';
+    updateWPM();
+    if(timer<=0)gameOver();
+  },1000);
+}
+
+function getRank(score,wpm){
+  const combined=score+(wpm*10);
+  if(combined>=5000) return {rank:'S',emoji:'👑',color:'#ffd700',desc:'タイピングマスター！'};
+  if(combined>=3000) return {rank:'A',emoji:'🌟',color:'#ff922b',desc:'すばらしい！'};
+  if(combined>=1500) return {rank:'B',emoji:'⭐',color:'#339af0',desc:'いい調子！'};
+  if(combined>=500)  return {rank:'C',emoji:'✨',color:'#51cf66',desc:'もっと練習しよう！'};
+  return {rank:'D',emoji:'💪',color:'#aaa',desc:'がんばれ！'};
+}
+
+function gameOver(){
+  playing=false;clearInterval(timerID);
+  const elapsed=(Date.now()-startTime)/1000;
+  const wpm=Math.round((charCount/5)/(elapsed/60)||0);
+  const accuracy=Math.round((charCount/(charCount+totalMisses))*100)||0;
+  const r=getRank(score,wpm);
+  const highKey='typing_highscore_'+mode+level;
+  const prevHigh=parseInt(localStorage.getItem(highKey)||'0');
+  const isRecord=score>prevHigh;
+  if(isRecord)localStorage.setItem(highKey,score);
+  const highScore=Math.max(prevHigh,score);
+  const reason=lives<=0?'ライフがなくなった！':'時間切れ！';
+  overlay.classList.remove('hidden');
+  overlay.innerHTML=`
+    <h1>🎮 GAME OVER</h1>
+    <h2>${MODES[mode].label} / ${level.toUpperCase()}</h2>
+    <p style="margin-bottom:8px">${reason}</p>
+    <div class="rank" style="color:${r.color}">${r.emoji} ${r.rank}ランク</div>
+    <p style="color:${r.color};margin:0 0 10px;font-size:14px">${r.desc}</p>
+    <div class="stat-grid">
+      <div><div class="label">スコア</div><div class="value gold">${score.toLocaleString()}</div></div>
+      <div><div class="label">最高記録</div><div class="value">${highScore.toLocaleString()}</div></div>
+      <div><div class="label">WPM</div><div class="value green">${wpm}</div></div>
+      <div><div class="label">最大コンボ</div><div class="value red">x${maxCombo}</div></div>
+      <div><div class="label">正確率</div><div class="value blue">${accuracy}%</div></div>
+      <div><div class="label">完成単語</div><div class="value">${wordsCompleted}語</div></div>
+      <div><div class="label">打鍵数</div><div class="value">${charCount}</div></div>
+      <div><div class="label">ミス数</div><div class="value red">${totalMisses}</div></div>
+    </div>
+    ${isRecord?'<div class="new-record">🆕 NEW RECORD!</div>':''}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px">
+      <button class="btn" onclick="startGame()">もう一回</button>
+      <button class="btn btn-secondary" onclick="showTitle()">タイトルへ</button>
+    </div>`;
+}
+
+function showTitle(){
+  overlay.classList.remove('hidden');
+  overlay.innerHTML=`
+    <h1>⌨️ タイピングゲーム</h1>
+    <h2>全部入り</h2>
+    <p>落ちてくる文字を打って消そう！<br>コンボでスコア倍率アップ！</p>
+    <div class="menu-grid">
+    <button class="menu-btn${mode==='en'?' selected':''}" data-mode="en" onclick="selectMode(this)">🔤 英語</button>
+    <button class="menu-btn${mode==='ja'?' selected':''}" data-mode="ja" onclick="selectMode(this)">🈳 日本語</button>
+    <button class="menu-btn${mode==='mix'?' selected':''}" data-mode="mix" onclick="selectMode(this)">🔀 混合</button>
+    <button class="menu-btn${mode==='hard'?' selected':''}" data-mode="hard" onclick="selectMode(this)">🔥 ハード</button>
+    </div>
+    <div class="menu-grid">
+    <button class="menu-btn${level==='easy'?' selected':''}" data-level="easy" onclick="selectLevel(this)">🌱 イージー</button>
+    <button class="menu-btn${level==='normal'?' selected':''}" data-level="normal" onclick="selectLevel(this)">🌿 ノーマル</button>
+    <button class="menu-btn${level==='hard'?' selected':''}" data-level="hard" onclick="selectLevel(this)">🌲 ハード</button>
+    <button class="menu-btn${level==='expert'?' selected':''}" data-level="expert" onclick="selectLevel(this)">💀 エキスパート</button>
+    </div>
+    <button class="btn" onclick="startGame()">START</button>`;
+}
+
+document.addEventListener('keydown',e=>{
+  if(!playing)return;
+  if(e.key.length===1)handleKey(e.key);
+});
+</script>
+</body>
+</html>
